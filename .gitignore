@@ -1,3 +1,20 @@
+# Runtime log files
+**/logs/**
+
+# Log file
+*.log
+
+.idea/
+*.iml
+/.vscode/settings.json
+/.vscode/tasks.json
+/.vscode/launch.json
+**/launchSettings.json
+
+/.vs/**
+.vs/
+
+
 # Prerequisites
 *.d
 
