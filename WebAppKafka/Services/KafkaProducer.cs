@@ -22,9 +22,6 @@ namespace WebAppKafka.Services
             {
                 BootstrapServers = kafkaConfiguration.Value.BootstrapServers,
                 // Debug = "", broker,topic,msg
-                BrokerVersionFallback = "0.10.0.0",
-                ApiVersionFallbackMs = 0,
-                MessageTimeoutMs = 5000,
             };
         }
 

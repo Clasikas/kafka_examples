@@ -22,9 +22,7 @@ namespace WebAppKafka.Services
             {
                 BootstrapServers = kafkaConfiguration.BootstrapServers,
                 GroupId = kafkaConfiguration.GroupId,
-                AutoCommitIntervalMs = 5000,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                BrokerVersionFallback = "0.10.0.0",
                 Debug = this.kafkaConfiguration.Debug
             };
 
