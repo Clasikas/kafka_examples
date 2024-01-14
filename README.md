@@ -30,29 +30,24 @@ follow steps :
 ```csharp
 using Ardalis.GuardClauses;
 using Confluent.Kafka;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Text;
-using WebAppKafka.Settings;
 
 namespace WebAppKafka.Services
 {
-    public class KafkaProducer : IKafkaProducer
+    public class JsonKafkaProducer : IKafkaProducer
     {
-        private readonly ILogger<KafkaProducer> logger;
-        private ProducerConfig producerConfig;
+        private readonly ILogger<JsonKafkaProducer> logger;
+        IProducer<string, string> kafkaHandle;
 
-        public KafkaProducer(IOptions<KafkaConfiguration> kafkaConfiguration, ILogger<KafkaProducer> logger)
+        public JsonKafkaProducer(KafkaClientHandle handle, ILogger<JsonKafkaProducer> logger)
         {
-            Guard.Against.Null(kafkaConfiguration, nameof(kafkaConfiguration));
-
             this.logger = logger;
-            this.producerConfig = new ProducerConfig
-            {
-                BootstrapServers = kafkaConfiguration.Value.BootstrapServers,
-                Debug = this.kafkaConfiguration.Debug
-            };
+            kafkaHandle = new DependentProducerBuilder<string, string>(handle.Handle)
+                    .SetKeySerializer(Serializers.Utf8)
+                    .SetValueSerializer(Serializers.Utf8)
+                .Build();
         }
 
         private Message<string, string> CreateMessage(object value, Dictionary<string, string> headers, string messagekey)
@@ -98,20 +93,14 @@ namespace WebAppKafka.Services
                 Guard.Against.NullOrEmpty(targetTopic, nameof(targetTopic));
                 Guard.Against.Null(messages, nameof(messages));
 
-                using (var producer = new ProducerBuilder<string, string>(producerConfig)
-                    .SetKeySerializer(Serializers.Utf8)
-                    .SetValueSerializer(Serializers.Utf8)
-                    .Build())
+                foreach (var message in messages)
                 {
-                    foreach (var message in messages)
-                    {
-                        var jsonMessage = CreateMessage(message, headers, messageKey);
-                        producer.Produce(targetTopic, jsonMessage, ErrorHandler);
-                    }
-
-                    // wait for up to X seconds for any inflight messages to be delivered.
-                    producer.Flush(TimeSpan.FromSeconds(2));
+                    var jsonMessage = CreateMessage(message, headers, messageKey);
+                    kafkaHandle.Produce(targetTopic, jsonMessage, ErrorHandler);
                 }
+
+                // wait for up to X seconds for any inflight messages to be delivered.
+                kafkaHandle.Flush(TimeSpan.FromSeconds(2));
             }
             catch (Exception e)
             {
@@ -134,17 +123,10 @@ namespace WebAppKafka.Services
 
             try
             {
-                using (var producer = new ProducerBuilder<string, string>(producerConfig)
-                    .SetKeySerializer(Serializers.Utf8)
-                    .SetValueSerializer(Serializers.Utf8)
-                    .Build())
-                {
+                var kafkaMessage = CreateMessage(message, headers, messageKey);
 
-                    var kafkaMessage = CreateMessage(message, headers, messageKey);
-
-                    var deliveryResult = await producer.ProduceAsync(targetTopic, kafkaMessage);
-                    logger.LogTrace(deliveryResult.Message.Value.ToString());
-                }
+                var deliveryResult = await kafkaHandle.ProduceAsync(targetTopic, kafkaMessage);
+                logger.LogTrace(deliveryResult.Message.Value.ToString());
             }
             catch (Exception e)
             {

@@ -14,10 +14,10 @@ namespace WebAppKafka.Controllers
     {
         IKafkaProducer producer;
         string kafkaTopic;
-        public KafkaController(IOptions<KafkaConfiguration> kafkaConfiguration, IKafkaProducer producer, ILogger<KafkaController> logger)
+        
+        public KafkaController(IOptions<KafkaConfiguration> kafkaConfiguration, IKafkaProducer producer)
         {
             Guard.Against.Null(kafkaConfiguration, nameof(kafkaConfiguration));
-
             this.kafkaTopic = kafkaConfiguration.Value.TopicName;
             this.producer = producer;
         }

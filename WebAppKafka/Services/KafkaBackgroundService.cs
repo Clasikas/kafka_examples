@@ -44,7 +44,7 @@ namespace WebAppKafka.Services
         protected virtual async Task ConsumeAsync(IConsumer<string, string> consumer, CancellationToken stoppingToken)
         {
             Guard.Against.Null(consumer, nameof(consumer));
-            
+
             // This NOP is here to free the calling thread during startup.
             // If we don't do that the startup isn't finalised (log "Application started. Press Ctrl+C to shut down.") until a first message is received.
             await Task.Delay(1);

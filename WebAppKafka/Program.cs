@@ -18,7 +18,8 @@ builder.Services.AddSingleton<KafkaBackgroundService>();
 builder.Services.AddSingleton<IHostedService>(p => p.GetService<KafkaBackgroundService>());
 
 // register KafkaProducer
-builder.Services.AddTransient<IKafkaProducer, KafkaProducer>();
+builder.Services.AddSingleton<KafkaClientHandle>();
+builder.Services.AddSingleton<IKafkaProducer, JsonKafkaProducer>();
 
 var app = builder.Build();
 
